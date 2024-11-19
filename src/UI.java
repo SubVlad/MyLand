@@ -1,5 +1,4 @@
-import Logic.VisualContent;
-import Logic.Game;
+import Logic.Session;
 
 
 import javax.swing.*;
@@ -11,8 +10,6 @@ import java.awt.event.KeyEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
-import static java.awt.MouseInfo.getPointerInfo;
-
 
 public class UI extends JPanel implements ActionListener {
 
@@ -22,7 +19,6 @@ public class UI extends JPanel implements ActionListener {
 
     public UI() {
         setBackground(Color.black);
-        Game game = new Game();
         initUI();
         addKeyListener(new VisualContentKeyListener());
         setFocusable(true);
@@ -36,10 +32,10 @@ public class UI extends JPanel implements ActionListener {
             @Override
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
-                for (int i = 0; i < Game.curobqu; i++) {
-                    g.drawImage(Game.EVCCurrentBoard.get(i).getImage(),
-                            (int) Game.EVCCurrentBoard.get(i).getRTWX(),
-                            (int) Game.EVCCurrentBoard.get(i).getRTWY(), this);
+                for (int i = 0; i < Session.get().curobqu; i++) {
+                    g.drawImage(Session.get().EVCCurrentBoard.get(i).getImage(),
+                            (int) Session.get().EVCCurrentBoard.get(i).getVisualContentX(),
+                            (int) Session.get().EVCCurrentBoard.get(i).getVisualContentY(), this);
                 }
             }
 
@@ -57,8 +53,9 @@ public class UI extends JPanel implements ActionListener {
             }
         });
 
-        ui.setPreferredSize(new Dimension(Game.BoardsInGame.get(Game.currentBoard).boardWidth, Game.BoardsInGame.get(Game.currentBoard).boardLength));
-
+        ui.setPreferredSize(new Dimension(
+                Session.get().BoardsInGame.get(Session.get().currentBoardIndex).boardWidth,
+                Session.get().BoardsInGame.get(Session.get().currentBoardIndex).boardLength));
         add(ui);
     }
 
@@ -86,30 +83,30 @@ public class UI extends JPanel implements ActionListener {
 
 
 
-            /*if (key == KeyEvent.VK_A && Game.EVCCurrentBoard.get(Game.curobqu - 1).getRTWX() != 0) {
-                Game.EVCCurrentBoard.get(Game.curobqu - 1).setRTWX(Game.EVCCurrentBoard.get(Game.curobqu - 1).getRTWX() - 1);
+            /*if (key == KeyEvent.VK_A && Game.EVCCurrentBoard.get(Game.curobqu - 1).getVisualContentX() != 0) {
+                Game.EVCCurrentBoard.get(Game.curobqu - 1).setRTBX(Game.EVCCurrentBoard.get(Game.curobqu - 1).getVisualContentX() - 1);
                 move();
             }
-            if (key == KeyEvent.VK_D && Game.EVCCurrentBoard.get(Game.curobqu - 1).getRTWX() != Game.rangeX) {
-                Game.EVCCurrentBoard.get(Game.curobqu - 1).setRTWX(Game.EVCCurrentBoard.get(Game.curobqu - 1).getRTWX() + 1);
+            if (key == KeyEvent.VK_D && Game.EVCCurrentBoard.get(Game.curobqu - 1).getVisualContentX() != Game.rangeX) {
+                Game.EVCCurrentBoard.get(Game.curobqu - 1).setRTBX(Game.EVCCurrentBoard.get(Game.curobqu - 1).getVisualContentX() + 1);
                 move();
             }
-            if (key == KeyEvent.VK_W && Game.EVCCurrentBoard.get(Game.curobqu - 1).getRTWY() != 0) {
-                Game.EVCCurrentBoard.get(Game.curobqu - 1).setRTWY(Game.EVCCurrentBoard.get(Game.curobqu - 1).getRTWY() - 1);
+            if (key == KeyEvent.VK_W && Game.EVCCurrentBoard.get(Game.curobqu - 1).getVisualContentY() != 0) {
+                Game.EVCCurrentBoard.get(Game.curobqu - 1).setRTBY(Game.EVCCurrentBoard.get(Game.curobqu - 1).getVisualContentY() - 1);
                 move();
             }
-            if (key == KeyEvent.VK_S && Game.EVCCurrentBoard.get(Game.curobqu - 1).getRTWY() != Game.rangeY) {
-                Game.EVCCurrentBoard.get(Game.curobqu - 1).setRTWY(Game.EVCCurrentBoard.get(Game.curobqu - 1).getRTWY() + 1);
+            if (key == KeyEvent.VK_S && Game.EVCCurrentBoard.get(Game.curobqu - 1).getVisualContentY() != Game.rangeY) {
+                Game.EVCCurrentBoard.get(Game.curobqu - 1).setRTBY(Game.EVCCurrentBoard.get(Game.curobqu - 1).getVisualContentY() + 1);
                 move();
             }
-            if (key == KeyEvent.VK_E && Game.EVCCurrentBoard.get(Game.curobqu - 1).getRTWX() == 0 &&
-                    Game.EVCCurrentBoard.get(Game.curobqu - 1).getRTWY() == 0) {
+            if (key == KeyEvent.VK_E && Game.EVCCurrentBoard.get(Game.curobqu - 1).getVisualContentX() == 0 &&
+                    Game.EVCCurrentBoard.get(Game.curobqu - 1).getVisualContentY() == 0) {
 
                 System.out.println("curloc = " + Game.curloc);
                 System.out.println("EVCCurrentBoard - " + Game.EVCCurrentBoard.get(0).getName());
                 Game.curloc = 1;
-                Game.EVCCurrentBoard.get(Game.curobqu - 1).setRTWX(1);
-                Game.EVCCurrentBoard.get(Game.curobqu - 1).setRTWY(1);
+                Game.EVCCurrentBoard.get(Game.curobqu - 1).setRTBX(1);
+                Game.EVCCurrentBoard.get(Game.curobqu - 1).setRTBY(1);
                 Game.changeBoard();
                 move();
             }*/

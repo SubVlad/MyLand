@@ -1,6 +1,4 @@
-import Logic.Game;
-import Logic.MovableObject;
-import Logic.Velocity;
+import Logic.*;
 
 
 import javax.swing.*;
@@ -13,16 +11,14 @@ import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 
+import static java.lang.Thread.sleep;
+
 
 public class Program extends JFrame implements ActionListener
 {
-    private JLabel label;
-    private Image image;
     private JPanel ui;
     private Timer timer;
-    public boolean ePressed = false;
-    public ArrayList<Thread> threads;
-    public int sl = 15; // no more than 15
+    public static ArrayList<Thread> threads;
 
     public static void main(String[] args)
     {
@@ -30,16 +26,19 @@ public class Program extends JFrame implements ActionListener
     }
 
     public Program() {
+        Session.get();
         threads = new ArrayList<>();
-        Game game = new Game();
+        Session.get().threads = threads;
         initUI();
         addKeyListener(new VisualContentKeyListener());
         setFocusable(true);
         timer = new Timer(150, this); //default delay - 250
         timer.start();
         initFrame();
-        threads.add(new Thread(new MyThread0(),"MyThread0"));
+        threads.add(new Thread(new MainRoutine(),"MainRoutine"));;
+        threads.add(new Thread(new RepaintRoutine(),"RepaintRoutine"));
         threads.forEach((n) -> n.start());
+
 
     }
     public void initFrame()
@@ -55,20 +54,29 @@ public class Program extends JFrame implements ActionListener
 
 
 
-    public void initUI() {
+    public void initUI() {;
+        Board currentBoard = Session.get().curBoard;
         ui = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
-                for (int i = 0; i < Game.BoardsInGame.get(Game.currentBoard).EVO.size(); i++) { // default i < game.curobqu
-                    g.drawImage(Game.EVCCurrentBoard.get(i).getImage(),
-                            (int) Game.EVCCurrentBoard.get(i).getRTWX(),
-                            (int) Game.EVCCurrentBoard.get(i).getRTWY(), this);
+                for (int i = 0; i < currentBoard.environments.size(); i++) { // default i < game.curobqu
+                    g.drawImage(Session.get().EVCCurrentBoard.get(i).getImage(),
+                            Session.get().EVCCurrentBoard.get(i).getVisualContentX() + Session.get().cameraPosition.x,
+                            Session.get().EVCCurrentBoard.get(i).getVisualContentY() + Session.get().cameraPosition.y,
+                            this);
                 }
-                for (int i = 0; i < Game.BoardsInGame.get(Game.currentBoard).MVO.size(); i++) { // default i < game.curobqu
-                    g.drawImage(Game.MVCCurrentBoard.get(i).getImage(),
-                            (int) Game.MVCCurrentBoard.get(i).getRTWX(),
-                            (int) Game.MVCCurrentBoard.get(i).getRTWY(), this);
+                for (int i = 0; i < currentBoard.movingVisibles.size(); i++) { // default i < game.curobqu
+                    g.drawImage(Session.get().MVCCurrentBoard.get(i).getImage(),
+                            Session.get().MVCCurrentBoard.get(i).getVisualContentX() + Session.get().cameraPosition.x,
+                            Session.get().MVCCurrentBoard.get(i).getVisualContentY() + Session.get().cameraPosition.y,
+                            this);
+                }
+                for (int i = 0; i < currentBoard.infoPanels.size(); i++) { // default i < game.curobqu
+                    g.drawImage(Session.get().IPCurrentBoard.get(i).getImage(),
+                            Session.get().IPCurrentBoard.get(i).getVisualContentX(),
+                            Session.get().IPCurrentBoard.get(i).getVisualContentY(),
+                            this);
                 }
             }
         };
@@ -84,28 +92,24 @@ public class Program extends JFrame implements ActionListener
             }
         });
 
-        ui.setPreferredSize(new Dimension(Game.BoardsInGame.get(Game.currentBoard).boardWidth, Game.BoardsInGame.get(Game.currentBoard).boardLength));
+        ui.setPreferredSize(new Dimension(
+                currentBoard.boardWidth,
+                currentBoard.boardLength));
 
         add(ui);
     }
 
     public void pressLeftButton() {
        // System.out.println(getMousePosition());
-        Game.Cursor.netX = getMousePosition().x - 8;
-        Game.Cursor.netY = getMousePosition().y - 30;
-        Game.changeHexColor();
-        repaint();
-    }
-
-    public void move() {
-
+        Session.get().cursor.netX = getMousePosition().x - 8;
+        Session.get().cursor.netY = getMousePosition().y - 30;
         repaint();
     }
 
 
     @Override
     public void actionPerformed(ActionEvent e) {
-        //repaint(); // здесь - метод, который вызывается по истечению таймера Timer, скорее всего. так или иначе, он вызывается главным тредом, и потому я перенес repaint() в тред движения, так как перерисовывание графики должно происходить после каждого шага каждого объекта, и тогда всё будет выгляддеть гладко
+        //repaint(); // здесь - метод, который вызывается по истечению таймера Timer, скорее всего. так или иначе, он вызывается главным тредом, и потому я перенес repaint() в тред движения, так как перерисовывание графики должно происходить после каждого шага каждого объекта, и тогда всё будет выглядеть гладко
     }
 
 
@@ -115,90 +119,70 @@ public class Program extends JFrame implements ActionListener
         public void keyPressed(KeyEvent e) {
             int key = e.getKeyCode();
             if(key == KeyEvent.VK_1){
-                Game.keyNumber = key-48;
+                Session.get().keyNumber = key-48;
             }
             if(key == KeyEvent.VK_2){
-                Game.keyNumber = key-48;
+                Session.get().keyNumber = key-48;
             }
             if(key == KeyEvent.VK_3){
-                Game.keyNumber = key-48;
+                Session.get().keyNumber = key-48;
             }
             if(key == KeyEvent.VK_4){
-                Game.keyNumber = key-48;
+                Session.get().keyNumber = key-48;
             }
-            if(key == KeyEvent.VK_W){
-                //Game.BoardsInGame[Game.currentBoard].MO.get(Game.players[0].getMovableIndex()).setVelocity(new Velocity(0, -1));
-                //Game.players[0].setRTWY(-1);//бля, идея была в том, что б найти визуал-индекс через мувабл-индекс игрока. нужно что б нажатие клавиши
-                //Game.players[0].getVisualContent().setRTWY(-1);// придавало велосити игроку, и значение велосити двигало как коллайдер-тело игрока, так и его визуал
 
-                Game.players[0].getVelocity().setDirectionYup(1);
-            }    //значит, надо что б программа постоянно вычисляла положение - дельта - на велосити игрока. но для сберегания мощностей, лучше это вычисление начинать при нажатии клавиши или ином ивенте
-            if(key == KeyEvent.VK_S){
-                Game.players[0].getVelocity().setDirectionYdown(1);
-            }
+            //
+
             if(key == KeyEvent.VK_A){
-                Game.players[0].getVelocity().setDirectionXleft(1);
+                Session.get().players[0].updateButtons(0, 1);
+                Session.get().cameraDelta.x = 3;
             }
             if(key == KeyEvent.VK_D){
-                Game.players[0].getVelocity().setDirectionXright(1);
+                Session.get().players[0].updateButtons(1, 1);
+                Session.get().cameraDelta.x = -3;
             }
-
-
-
-            /*if (key == KeyEvent.VK_A && Game.EVCCurrentBoard.get(Game.curobqu - 1).getRTWX() != 0) {
-                Game.EVCCurrentBoard.get(Game.curobqu - 1).setRTWX(Game.EVCCurrentBoard.get(Game.curobqu - 1).getRTWX() - 1);
-                move();
+            if(key == KeyEvent.VK_W){
+                Session.get().players[0].updateButtons(2, 1);
+                Session.get().cameraDelta.y = 3;
             }
-            if (key == KeyEvent.VK_D && Game.EVCCurrentBoard.get(Game.curobqu - 1).getRTWX() != Game.rangeX) {
-                Game.EVCCurrentBoard.get(Game.curobqu - 1).setRTWX(Game.EVCCurrentBoard.get(Game.curobqu - 1).getRTWX() + 1);
-                move();
+            if(key == KeyEvent.VK_S){
+                Session.get().players[0].updateButtons(3, 1);
+                Session.get().cameraDelta.y = -3;
             }
-            if (key == KeyEvent.VK_W && Game.EVCCurrentBoard.get(Game.curobqu - 1).getRTWY() != 0) {
-                Game.EVCCurrentBoard.get(Game.curobqu - 1).setRTWY(Game.EVCCurrentBoard.get(Game.curobqu - 1).getRTWY() - 1);
-                move();
-            }
-            if (key == KeyEvent.VK_S && Game.EVCCurrentBoard.get(Game.curobqu - 1).getRTWY() != Game.rangeY) {
-                Game.EVCCurrentBoard.get(Game.curobqu - 1).setRTWY(Game.EVCCurrentBoard.get(Game.curobqu - 1).getRTWY() + 1);
-                move();
-            }
-            if (key == KeyEvent.VK_E && Game.EVCCurrentBoard.get(Game.curobqu - 1).getRTWX() == 0 &&
-                    Game.EVCCurrentBoard.get(Game.curobqu - 1).getRTWY() == 0) {
-
-                System.out.println("curloc = " + Game.curloc);
-                System.out.println("EVCCurrentBoard - " + Game.EVCCurrentBoard.get(0).getName());
-                Game.curloc = 1;
-                Game.EVCCurrentBoard.get(Game.curobqu - 1).setRTWX(1);
-                Game.EVCCurrentBoard.get(Game.curobqu - 1).setRTWY(1);
-                Game.changeBoard();
-                move();
-            }*/
         }
 
         public void keyReleased(KeyEvent e){
             int key = e.getKeyCode();
             if(key == KeyEvent.VK_1){
-                Game.keyNumber = 0;
+                Session.get().keyNumber = 0;
             }
             if(key == KeyEvent.VK_2){
-                Game.keyNumber = 0;
+                Session.get().keyNumber = 0;
             }
             if(key == KeyEvent.VK_3){
-                Game.keyNumber = 0;
+                Session.get().keyNumber = 0;
             }
             if(key == KeyEvent.VK_4){
-                Game.keyNumber = 0;
+                Session.get().keyNumber = 0;
             }
-            if(key == KeyEvent.VK_W){
-                Game.players[0].getVelocity().setDirectionYup(0);
-            }
-            if(key == KeyEvent.VK_S){
-                Game.players[0].getVelocity().setDirectionYdown(0);
-            }
+
+            //
+
             if(key == KeyEvent.VK_A){
-                Game.players[0].getVelocity().setDirectionXleft(0);
+                Session.get().players[0].updateButtons(0, 0);
+                Session.get().cameraDelta.x = 0;
             }
             if(key == KeyEvent.VK_D){
-                Game.players[0].getVelocity().setDirectionXright(0);
+                Session.get().players[0].updateButtons(1, 0);
+                Session.get().cameraDelta.x = 0;
+            }
+            if(key == KeyEvent.VK_W){
+                Session.get().players[0].updateButtons(2, 0);
+                Session.get().cameraDelta.y = 0;
+            }
+            if(key == KeyEvent.VK_S){
+                Session.get().players[0].updateButtons(3, 0);
+                Session.get().cameraDelta.y = 0;
             }
 
         }
@@ -226,14 +210,41 @@ public class Program extends JFrame implements ActionListener
             return netY;
         }*//*
     }*/
-    class MyThread0 implements Runnable {
-        public void run() {
+    public class MainRoutine implements Runnable {
+        byte waitForGC = 0; // каждые 30 тиков вызывать Сборщик мусора
+        int w = 0;
+        public synchronized void run() {
+            Board currentBoard = Session.get().curBoard;
+
             while(true){
                 try {
-                    Thread.sleep(sl);
+                    Thread.sleep(15);  // no more than 15
                 } catch (InterruptedException e) {
                 }
-                Game.BoardsInGame.get(Game.currentBoard).MO.forEach(MovableObject::move); // default - MO.forEach((n) -> n.move());
+                for(int i = 0; i < currentBoard.movables.size(); i++){
+                    currentBoard.movables.get(i).performMove();
+                }
+                Session.get().cameraPosition.x += Session.get().cameraDelta.x;
+                Session.get().cameraPosition.y += Session.get().cameraDelta.y;
+
+                //the segment bellow allows to decrease the RAM demand by calling the garbage collector all the time
+                if(waitForGC == 30){
+                    Runtime.getRuntime().gc(); // без этого метода наблюдается постоянный рост потребления ОП
+                    waitForGC = 0;
+                }else{
+                    waitForGC++;
+                }
+            }
+        }
+    }
+    public class RepaintRoutine implements Runnable {
+        public synchronized void run() {
+            while(true){
+                //System.out.println(Session.get().players[0].getRTBX() + " " + Session.get().players[0].getRTBY());
+                try {
+                    Thread.sleep(15);  // no more than 15
+                } catch (InterruptedException e) {
+                }
                 ui.repaint();
             }
         }

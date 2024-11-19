@@ -1,103 +1,80 @@
 package Logic;
 
-public class Velocity {
-    public int pathX;
-    public int pathY;
-    public int delayBetweenSteps;
-    public int directionXleft;;
-    public int directionXright;
-    public int directionYup;
-    public int directionYdown;
-    public int myTime;
-    public int mySpeed;
-    public Velocity(int pathX, int pathY)
-    {
-        this.pathX = pathX;
-        this.pathY = pathY;
-        this.delayBetweenSteps = 2; // 2 only if speed is 10 or less
-        this.mySpeed = 10;  // no more than 20, under 15 is well, 10 is recomended
+import org.jetbrains.annotations.NotNull;
 
+public class Velocity {
+    public PairCoord pathPC;
+    public PairCoord vectorPC;
+    public byte speed;
+    public Velocity(int pathX, int pathY){
+        this.pathPC = new PairCoord(pathX,pathY);
+        this.vectorPC = new PairCoord(0,0);
+        this.speed = 3;
     }
-    public void sumVelocity(Velocity velocity)
-    {
-        this.pathX = this.pathX + velocity.pathX;
-        this.pathY = this.pathY + velocity.pathY;
+    public void updateVectors(MovableObject object){
+        this.vectorPC.x = object.getButtons()[1] - object.getButtons()[0];
+        this.vectorPC.y = object.getButtons()[3] - object.getButtons()[2];
+        this.pathPC.x = this.vectorPC.x * this.speed;
+        this.pathPC.y = this.vectorPC.y * this.speed;
     }
-    public void subtractVelocity(Velocity velocity)
-    {
-        this.pathX = this.pathX - velocity.pathX;
-        this.pathY = this.pathY - velocity.pathY;
+
+    public void updateVectors(PairCoord pc){
+        this.vectorPC.x = pc.x;
+        this.vectorPC.y = pc.y;
+        this.pathPC.x = this.vectorPC.x * this.speed;
+        this.pathPC.y = this.vectorPC.y * this.speed;
     }
-    public void multiplyVelocity(int coef)
-    {
-        this.pathX = this.pathX * coef;
-        this.pathY = this.pathY * coef;
+    public void updateVectors(PairCoord pcBigger, PairCoord pcSmaller){
+        this.vectorPC.x = pcBigger.x - pcSmaller.x;
+        this.vectorPC.y = pcBigger.y - pcSmaller.y;
+        this.pathPC.x = this.vectorPC.x * this.speed;
+        this.pathPC.y = this.vectorPC.y * this.speed;
     }
     public int getPathX()
     {
-        return pathX;
+        return pathPC.x;
     }
     public int getPathY()
     {
-        return pathY;
+        return pathPC.y;
+    }
+    public PairCoord getPathPC(){
+        return pathPC;
+    }
+    public PairCoord getVectorPC(){
+        return vectorPC;
+    }
+    public int getVectorX()
+    {
+        return this.vectorPC.x;
+    }
+    public int getVectorY()
+    {
+        return this.vectorPC.y;
     }
     public void setPathX(int vectorX)
     {
-        this.pathX = vectorX;
+        this.pathPC.x = vectorX;
     }
     public void setPathY(int vectorY)
     {
-        this.pathY = vectorY;
+        this.pathPC.y = vectorY;
     }
-    public void directMe()
+
+    public void setVectorX(int vectorX)
     {
-       /* int vectorX = this.directionXright - this.directionXleft;
-        int vectorY = this.directionYdown - this.directionYup;
-        this.myTime = this.myTime + this.mySpeed;
-        if(this.myTime == this.timeX)
-        {
-            this.setPathX(vectorX);
-            this.setPathY(vectorY);
-            this.myTime = 0;
-        }else{
-            this.setPathX(vectorX);
-            this.setPathY(vectorY);
-        }*/
-        int vectorX = this.directionXright - this.directionXleft;
-        int vectorY = this.directionYdown - this.directionYup;
-        if(this.myTime == 0){
-            if(vectorX != 0 && vectorY != 0){
-                this.setPathX(vectorX * this.mySpeed / 2);
-                this.setPathY(vectorY * this.mySpeed / 2);
-            }else{
-            this.setPathX(vectorX * this.mySpeed);
-            this.setPathY(vectorY * this.mySpeed);
-            }
-        }else{
-            this.setPathX(0);
-            this.setPathY(0);
-        }
-        if(vectorX != 0 || vectorY != 0){
-            this.myTime = this.myTime + 1;
-        }
-        if(this.myTime >= this.delayBetweenSteps){
-            this.myTime = 0;
-        }
+        this.vectorPC.x = vectorX;
     }
-    public void setDirectionXleft(int directionXleft)
+    public void setVectorY(int vectorY)
     {
-        this.directionXleft = directionXleft;
+        this.vectorPC.y = vectorY;
     }
-    public void setDirectionXright(int directionXright)
-    {
-        this.directionXright = directionXright;
+    public void setPathsByPC(PairCoord pc){
+        this.pathPC.x = pc.x;
+        this.pathPC.y = pc.y;
     }
-    public void setDirectionYup(int directionYup)
-    {
-        this.directionYup = directionYup;
-    }
-    public void setDirectionYdown(int directionYdown)
-    {
-        this.directionYdown = directionYdown;
+    public void setVectorsByPC(PairCoord pc){
+        this.vectorPC.x = pc.x;
+        this.vectorPC.y = pc.y;
     }
 }
